@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  color: #d4dae3;
+  background-color: #030406;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 20% 0%, #0d1117 0%, #030406 50%, #010203 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
