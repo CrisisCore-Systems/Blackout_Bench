@@ -23,10 +23,10 @@ If neither is set, it falls back to local `chromium.launch()` for local developm
 
 Use one of these patterns:
 
-1. Chrome DevTools Protocol endpoint
+1. Browserless BaaS v2 websocket endpoint
 
 ```bash
-BROWSER_CDP_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
+BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
 ```
 
 This is the recommended Browserless shape.
@@ -35,6 +35,12 @@ This is the recommended Browserless shape.
 
 ```bash
 BROWSER_WS_ENDPOINT=wss://YOUR-PLAYWRIGHT-ENDPOINT
+```
+
+1. Chrome DevTools Protocol endpoint
+
+```bash
+BROWSER_CDP_ENDPOINT=wss://YOUR-CDP-ENDPOINT
 ```
 
 Only set one.
@@ -58,7 +64,7 @@ railway init
 ```bash
 PORT=8787
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-BROWSER_CDP_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
+BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
 ```
 
 Optional:

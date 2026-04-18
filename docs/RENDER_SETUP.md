@@ -32,13 +32,13 @@ That will create a web service named `blackoutbench-runner` with:
 
 Set these in the Render service dashboard:
 
-1. `BROWSER_CDP_ENDPOINT`
-   For Browserless, use a Chromium CDP URL such as `wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN`.
+1. `BROWSER_WS_ENDPOINT`
+   For Browserless BaaS v2, use a websocket browser URL such as `wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN`.
 
 2. `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true`
    Keeps the service lightweight by avoiding local browser download.
 
-If your provider gives you a Playwright-native websocket endpoint instead of CDP, set `BROWSER_WS_ENDPOINT` instead.
+If you have a true CDP endpoint instead, set `BROWSER_CDP_ENDPOINT`.
 
 Optional:
 
@@ -81,4 +81,4 @@ You can create a `Web Service` manually with these values:
 
 ## Important Limitation
 
-Render is hosting the runner logic, not the browser itself. The browser work is expected to come from the hosted endpoint you provide in `BROWSER_CDP_ENDPOINT` or `BROWSER_WS_ENDPOINT`.
+Render is hosting the runner logic, not the browser itself. The browser work is expected to come from the hosted endpoint you provide in `BROWSER_WS_ENDPOINT` or `BROWSER_CDP_ENDPOINT`.
