@@ -45,6 +45,9 @@ Optional:
 1. `GEMINI_API_KEY`
    Only if you want Gemini repair synthesis enabled.
 
+2. `GEMINI_MODEL=gemini-2.5-flash`
+   Use this to override the default model if Google retires or changes model endpoints.
+
 ## Verify the Runner
 
 After deploy, open either:

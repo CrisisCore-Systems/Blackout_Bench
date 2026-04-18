@@ -13,6 +13,8 @@ interface GeminiSynthesisResult {
   guidance?: GeminiGuidance
 }
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
+
 export const summarizeWithGemini = async (
   checks: AuditCheckResult[],
 ): Promise<GeminiSynthesisResult> => {
@@ -35,7 +37,7 @@ export const summarizeWithGemini = async (
   }
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -55,7 +57,9 @@ export const summarizeWithGemini = async (
   })
 
   if (!response?.ok) {
-    logGeminiIssue(`upstream returned ${response?.status ?? 'no response'}`)
+    logGeminiIssue(
+      `upstream returned ${response?.status ?? 'no response'} for model ${GEMINI_MODEL}`,
+    )
     return { status: response ? 'upstream_failed' : 'request_failed' }
   }
 
