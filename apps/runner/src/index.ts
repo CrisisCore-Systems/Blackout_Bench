@@ -12,25 +12,65 @@ import { spinnerAbuse } from './audits/spinnerAbuse.js'
 import type { AuditCheck } from './audits/types.js'
 import { summarizeWithGemini } from './prompts/gemini.js'
 
-const isCdpEndpoint = (endpoint: string) => endpoint.includes('/devtools/browser/')
+const isCdpEndpoint = (endpoint: string) =>
+  endpoint.includes('/devtools/browser/') || endpoint.includes('browserless.io/chromium')
+
+const sanitizeEndpoint = (endpoint: string) => endpoint.replace(/token=[^&]+/i, 'token=***')
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, label: string) =>
+  Promise.race<T>([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs)
+    }),
+  ])
 
 const connectBrowser = async () => {
   const cdpEndpoint = process.env.BROWSER_CDP_ENDPOINT?.trim()
   const wsEndpoint = process.env.BROWSER_WS_ENDPOINT?.trim()
+  const timeoutMs = Number(process.env.BROWSER_CONNECT_TIMEOUT_MS ?? 15000)
 
   if (cdpEndpoint) {
-    return chromium.connectOverCDP(cdpEndpoint)
+    return {
+      browser: await withTimeout(
+        chromium.connectOverCDP(cdpEndpoint),
+        timeoutMs,
+        'Browser CDP connection',
+      ),
+      endpoint: sanitizeEndpoint(cdpEndpoint),
+      mode: 'cdp' as const,
+    }
   }
 
   if (wsEndpoint) {
     if (isCdpEndpoint(wsEndpoint)) {
-      return chromium.connectOverCDP(wsEndpoint)
+      return {
+        browser: await withTimeout(
+          chromium.connectOverCDP(wsEndpoint),
+          timeoutMs,
+          'Browser CDP connection',
+        ),
+        endpoint: sanitizeEndpoint(wsEndpoint),
+        mode: 'cdp' as const,
+      }
     }
 
-    return chromium.connect(wsEndpoint)
+    return {
+      browser: await withTimeout(
+        chromium.connect(wsEndpoint),
+        timeoutMs,
+        'Browser websocket connection',
+      ),
+      endpoint: sanitizeEndpoint(wsEndpoint),
+      mode: 'ws' as const,
+    }
   }
 
-  return chromium.launch({ headless: true })
+  return {
+    browser: await chromium.launch({ headless: true }),
+    endpoint: 'local-chromium',
+    mode: 'local' as const,
+  }
 }
 
 const checks: { name: string; run: AuditCheck }[] = [
@@ -51,8 +91,8 @@ export const runAudit = async (
 ): Promise<AuditReport> => {
   const startedAt = new Date().toISOString()
   const results: AuditCheckResult[] = []
-  let browser: Awaited<ReturnType<typeof connectBrowser>> | undefined
-  let context: Awaited<ReturnType<Awaited<ReturnType<typeof connectBrowser>>['newContext']>> | undefined
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined
+  let context: Awaited<ReturnType<Awaited<ReturnType<typeof chromium.launch>>['newContext']>> | undefined
 
   onEvent('Audit execution started.')
   console.info(`[BlackoutBench][Audit ${id}] execution started`)
@@ -60,8 +100,17 @@ export const runAudit = async (
   try {
     onEvent('Connecting browser...')
     console.info(`[BlackoutBench][Audit ${id}] connecting browser`)
-    browser = await connectBrowser()
-    context = await browser.newContext()
+    const connection = await connectBrowser()
+    browser = connection.browser
+    onEvent(`Using browser endpoint: ${connection.endpoint}`)
+    onEvent(`Browser connection mode: ${connection.mode}`)
+    console.info(
+      `[BlackoutBench][Audit ${id}] browser endpoint ${connection.endpoint} via ${connection.mode}`,
+    )
+    context =
+      connection.mode === 'cdp' && browser.contexts().length
+        ? browser.contexts()[0]
+        : await browser.newContext()
     const page = await context.newPage()
     onEvent('Browser connected.')
     console.info(`[BlackoutBench][Audit ${id}] browser connected`)
