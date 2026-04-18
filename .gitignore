@@ -6,3 +6,4 @@ apps/*/.vite
 coverage
 playwright-report
 
+.vercel

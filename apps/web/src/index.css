@@ -1,16 +1,300 @@
 @import "tailwindcss";
 
 :root {
-  color: #d4dae3;
-  background-color: #030406;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  color: #c7ced6;
+  background-color: #050608;
+  font-family: "Bahnschrift", "Arial Narrow", "Segoe UI", sans-serif;
+  --bg: #050608;
+  --bg-elevated: #0c1014;
+  --bg-panel: rgba(11, 15, 19, 0.88);
+  --bg-panel-strong: rgba(7, 9, 12, 0.94);
+  --line: rgba(142, 153, 166, 0.22);
+  --line-strong: rgba(194, 202, 210, 0.28);
+  --text-soft: #9ba6b2;
+  --text-body: #c7ced6;
+  --text-strong: #f3f5f7;
+  --amber: #d1a24d;
+  --red: #c45b53;
+  --steel: #8a98a7;
+  --focus: #b9cbe2;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 20% 0%, #0d1117 0%, #030406 50%, #010203 100%);
+  color: var(--text-body);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    radial-gradient(circle at top, rgba(196, 91, 83, 0.08), transparent 28%),
+    linear-gradient(180deg, #07090b 0%, #050608 100%);
+  background-size: 32px 32px, 32px 32px, auto, auto;
+  letter-spacing: 0.01em;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 18%, transparent 82%, rgba(255, 255, 255, 0.02));
+  opacity: 0.7;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  position: relative;
+}
+
+.inspection-shell {
+  position: relative;
+}
+
+.inspection-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 10%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018), transparent 14%);
+  opacity: 0.35;
+}
+
+.panel {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 16%);
+  opacity: 0.8;
+}
+
+.panel-rule::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  margin-top: 1rem;
+  background: linear-gradient(90deg, rgba(209, 162, 77, 0.65), rgba(209, 162, 77, 0.05));
+}
+
+.panel-critical {
+  border-color: rgba(196, 91, 83, 0.38);
+}
+
+.panel-document {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.016), transparent 16%),
+    repeating-linear-gradient(180deg, transparent, transparent 31px, rgba(255, 255, 255, 0.03) 31px, rgba(255, 255, 255, 0.03) 32px),
+    var(--bg-panel-strong);
+  border-color: rgba(196, 91, 83, 0.3);
+}
+
+.control-button {
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: rgba(8, 10, 13, 0.95);
+  color: var(--text-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.74rem;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+.control-button:hover {
+  transform: translateY(-1px);
+}
+
+.control-button:focus-visible,
+.control-input:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.control-button--primary {
+  border-color: rgba(196, 91, 83, 0.75);
+  background: rgba(74, 15, 15, 0.92);
+  color: #f7e4e2;
+}
+
+.control-button--primary:hover {
+  border-color: rgba(196, 91, 83, 0.95);
+  background: rgba(96, 20, 20, 0.95);
+}
+
+.control-button--secondary:hover {
+  border-color: rgba(209, 162, 77, 0.85);
+  color: #f1d8a6;
+}
+
+.control-input {
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: rgba(6, 8, 10, 0.96);
+  color: var(--text-strong);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+
+.doctrine-strip {
+  display: inline-block;
+  border-top: 1px solid rgba(209, 162, 77, 0.5);
+  border-bottom: 1px solid rgba(209, 162, 77, 0.2);
+  padding: 0.65rem 0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+}
+
+.proof-cell {
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(8, 11, 14, 0.94);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.proof-marker {
+  color: var(--amber);
+}
+
+.metric-box {
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(8, 11, 14, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.metric-box--critical {
+  border-left: 3px solid var(--red);
+}
+
+.metric-box--warning {
+  border-left: 3px solid var(--amber);
+}
+
+.metric-box--neutral {
+  border-left: 3px solid var(--steel);
+}
+
+.result-score {
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(209, 162, 77, 0.45);
+  background: rgba(24, 18, 9, 0.82);
+  padding: 0.45rem 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.status-badge::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--amber);
+  box-shadow: 0 0 0 1px rgba(209, 162, 77, 0.25);
+}
+
+.finding-item {
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  background: rgba(7, 10, 13, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.finding-item--critical {
+  border-left-color: var(--red);
+}
+
+.finding-item--silent {
+  border-left-color: var(--amber);
+}
+
+.finding-item--strong {
+  border-left-color: var(--steel);
+}
+
+.finding-item--neutral {
+  border-left-color: rgba(138, 152, 167, 0.45);
+}
+
+.severity-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  padding: 0.2rem 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.severity-chip--critical {
+  color: #f0a29d;
+}
+
+.severity-chip--silent {
+  color: #e0bf76;
+}
+
+.severity-chip--strong {
+  color: #b8c5d2;
+}
+
+.severity-chip--neutral {
+  color: #aab4bf;
+}
+
+.incident-panel {
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: rgba(8, 11, 14, 0.97);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.incident-panel--critical {
+  border-left: 3px solid var(--red);
+}
+
+.incident-panel--silent {
+  border-left: 3px solid var(--amber);
+}
+
+.incident-panel--strong {
+  border-left: 3px solid var(--steel);
+}
+
+.report-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }

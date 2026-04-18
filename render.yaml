@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: blackoutbench-runner
+    runtime: node
+    rootDir: .
+    plan: free
+    buildCommand: npm install && npm --workspace apps/runner run build
+    startCommand: npm --workspace apps/runner run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "true"
+      - key: BROWSER_WS_ENDPOINT
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

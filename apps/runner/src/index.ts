@@ -12,6 +12,21 @@ import { spinnerAbuse } from './audits/spinnerAbuse'
 import type { AuditCheck } from './audits/types'
 import { summarizeWithGemini } from './prompts/gemini'
 
+const connectBrowser = async () => {
+  const cdpEndpoint = process.env.BROWSER_CDP_ENDPOINT?.trim()
+  const wsEndpoint = process.env.BROWSER_WS_ENDPOINT?.trim()
+
+  if (cdpEndpoint) {
+    return chromium.connectOverCDP(cdpEndpoint)
+  }
+
+  if (wsEndpoint) {
+    return chromium.connect(wsEndpoint)
+  }
+
+  return chromium.launch({ headless: true })
+}
+
 const checks: { name: string; run: AuditCheck }[] = [
   { name: 'Offline reload', run: offlineReload },
   { name: 'Essential action survival', run: essentialUtility },
@@ -28,7 +43,7 @@ export const runAudit = async (
   targetUrl: string,
   onEvent: (event: string, currentCheck?: string) => void,
 ): Promise<AuditReport> => {
-  const browser = await chromium.launch({ headless: true })
+  const browser = await connectBrowser()
   const context = await browser.newContext()
   const page = await context.newPage()
   const startedAt = new Date().toISOString()

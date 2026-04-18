@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/server.ts",
+    "start": "node dist/apps/runner/src/server.js",
     "build": "tsc -p tsconfig.json",
     "test": "tsx --test ./src/scoring/score.test.ts"
   },
