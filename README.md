@@ -119,7 +119,7 @@ GEMINI_API_KEY=your_key_here npm run dev:runner
 Optional remote browser support for lightweight runner hosting:
 
 ```bash
-BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN npm run dev:runner
+BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io?token=YOUR_TOKEN npm run dev:runner
 ```
 
 This is the recommended Browserless BaaS v2 shape.

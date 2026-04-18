@@ -26,7 +26,7 @@ Use one of these patterns:
 1. Browserless BaaS v2 websocket endpoint
 
 ```bash
-BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
+BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io?token=YOUR_TOKEN
 ```
 
 This is the recommended Browserless shape.
@@ -64,7 +64,7 @@ railway init
 ```bash
 PORT=8787
 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN
+BROWSER_WS_ENDPOINT=wss://production-sfo.browserless.io?token=YOUR_TOKEN
 ```
 
 Optional:

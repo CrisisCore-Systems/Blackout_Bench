@@ -33,7 +33,7 @@ That will create a web service named `blackoutbench-runner` with:
 Set these in the Render service dashboard:
 
 1. `BROWSER_WS_ENDPOINT`
-   For Browserless BaaS v2, use a websocket browser URL such as `wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN`.
+   For Browserless BaaS v2, use a websocket browser URL such as `wss://production-sfo.browserless.io?token=YOUR_TOKEN`.
 
 2. `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=true`
    Keeps the service lightweight by avoiding local browser download.
