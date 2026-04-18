@@ -49,13 +49,23 @@ export const runAudit = async (
   targetUrl: string,
   onEvent: (event: string, currentCheck?: string) => void,
 ): Promise<AuditReport> => {
-  const browser = await connectBrowser()
-  const context = await browser.newContext()
-  const page = await context.newPage()
   const startedAt = new Date().toISOString()
   const results: AuditCheckResult[] = []
+  let browser: Awaited<ReturnType<typeof connectBrowser>> | undefined
+  let context: Awaited<ReturnType<Awaited<ReturnType<typeof connectBrowser>>['newContext']>> | undefined
+
+  onEvent('Audit execution started.')
+  console.info(`[BlackoutBench][Audit ${id}] execution started`)
 
   try {
+    onEvent('Connecting browser...')
+    console.info(`[BlackoutBench][Audit ${id}] connecting browser`)
+    browser = await connectBrowser()
+    context = await browser.newContext()
+    const page = await context.newPage()
+    onEvent('Browser connected.')
+    console.info(`[BlackoutBench][Audit ${id}] browser connected`)
+
     for (const check of checks) {
       onEvent(`Running ${check.name}...`, check.name)
       const result = await check.run({ page, context, targetUrl })
@@ -63,12 +73,13 @@ export const runAudit = async (
       onEvent(`${check.name}: ${result.status.toUpperCase()} — ${result.summary}`, check.name)
     }
   } finally {
-    await context.close()
-    await browser.close()
+    await context?.close()
+    await browser?.close()
   }
 
   const score = scoreAudit(results)
   const gemini = await summarizeWithGemini(results)
+  console.info(`[BlackoutBench][Audit ${id}] completed with gemini status ${gemini.status}`)
 
   return {
     id,

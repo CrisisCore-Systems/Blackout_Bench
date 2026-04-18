@@ -53,6 +53,7 @@ createServer(async (req, res) => {
           status: 'queued',
           events: ['Audit accepted. Queued for execution.'],
         })
+        console.info(`[BlackoutBench][Audit ${auditId}] accepted for ${targetUrl}`)
 
         void runAudit(auditId, targetUrl, (event, currentCheck) => {
           const current = audits.get(auditId)
@@ -60,6 +61,7 @@ createServer(async (req, res) => {
           current.status = 'running'
           current.currentCheck = currentCheck
           current.events.push(event)
+          console.info(`[BlackoutBench][Audit ${auditId}] ${event}`)
         })
           .then((report) => {
             const current = audits.get(auditId)
@@ -68,6 +70,7 @@ createServer(async (req, res) => {
             current.report = report
             current.currentCheck = undefined
             current.events.push('Audit complete.')
+            console.info(`[BlackoutBench][Audit ${auditId}] completed`)
           })
           .catch((error: unknown) => {
             const current = audits.get(auditId)
@@ -75,6 +78,7 @@ createServer(async (req, res) => {
             current.status = 'error'
             current.error = error instanceof Error ? error.message : 'Unknown audit failure'
             current.events.push(`Audit failed: ${current.error}`)
+            console.error(`[BlackoutBench][Audit ${auditId}] failed: ${current.error}`)
           })
 
         send(res, 202, { auditId })
