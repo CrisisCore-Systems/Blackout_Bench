@@ -323,10 +323,45 @@ function App() {
             <div className="mt-3">
               <span className="status-badge">{report.verdict}</span>
             </div>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400">
-              {report.gemini?.summary ??
-                'The point is not the number by itself. The point is the failure pattern: what broke, what failed silently, what remained usable, and what should be repaired first.'}
-            </p>
+
+            {report.gemini ? (
+              <div className="gemini-conclusion mt-5 p-5">
+                <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-amber-300">
+                  Gemini conclusion
+                </p>
+                <p className="gemini-conclusion__summary mt-3 max-w-3xl text-xl leading-8 text-slate-50 md:text-2xl">
+                  {report.gemini.summary}
+                </p>
+                <div className="mt-5 grid gap-4 md:grid-cols-[0.95fr_1.05fr]">
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                      Repair priorities
+                    </p>
+                    <ol className="mt-3 space-y-2 text-sm leading-6 text-slate-200">
+                      {report.gemini.priorities.map((priority, index) => (
+                        <li key={`${priority}-${index}`}>
+                          <span className="text-amber-300">0{index + 1}</span> {priority}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div>
+                    <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                      Why this matters
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">
+                      {report.gemini.whyThisMatters}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-400">
+                The point is not the number by itself. The point is the failure pattern: what
+                broke, what failed silently, what remained usable, and what should be repaired
+                first.
+              </p>
+            )}
 
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
               <div className="metric-box metric-box--critical p-3">
@@ -432,22 +467,6 @@ function App() {
           <p className="mt-2 text-sm text-amber-200">
             Repair priority: {report.checks[selectedFinding].recommendation}
           </p>
-        </section>
-      ) : null}
-
-      {report?.gemini ? (
-        <section className="panel mt-6 p-6">
-          <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-indigo-300">Gemini guidance</h3>
-          <p className="mt-2 text-slate-200">{report.gemini.summary}</p>
-          <ul className="mt-3 list-disc pl-5 text-slate-300">
-            {report.gemini.priorities.map((priority) => (
-              <li key={priority}>{priority}</li>
-            ))}
-          </ul>
-          <p className="mt-3 font-mono text-xs uppercase tracking-[0.2em] text-slate-500">
-            Why this matters
-          </p>
-          <p className="mt-2 text-sm text-slate-400">{report.gemini.whyThisMatters}</p>
         </section>
       ) : null}
 
