@@ -83,6 +83,7 @@ export const runAudit = async (
     silentFailures: score.silentFailures,
     essentialActionSurvival: score.essentialActionSurvival,
     subscores: score.subscores,
-    gemini,
+    geminiStatus: gemini.status,
+    gemini: gemini.guidance,
   }
 }

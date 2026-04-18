@@ -1,22 +1,31 @@
-import type { AuditCheckResult, GeminiGuidance } from '../../../../packages/shared/src/types.js'
+import type {
+  AuditCheckResult,
+  GeminiGuidance,
+  GeminiStatus,
+} from '../../../../packages/shared/src/types.js'
 
 const logGeminiIssue = (message: string) => {
   console.warn(`[BlackoutBench][Gemini] ${message}`)
 }
 
+interface GeminiSynthesisResult {
+  status: GeminiStatus
+  guidance?: GeminiGuidance
+}
+
 export const summarizeWithGemini = async (
   checks: AuditCheckResult[],
-): Promise<GeminiGuidance | undefined> => {
+): Promise<GeminiSynthesisResult> => {
   const apiKey = process.env.GEMINI_API_KEY
 
   if (!apiKey) {
-    return undefined
+    return { status: 'missing_api_key' }
   }
 
   const failedChecks = checks.filter((check) => check.status !== 'pass')
 
   if (!failedChecks.length) {
-    return undefined
+    return { status: 'no_actionable_failures' }
   }
 
   const prompt = {
@@ -47,7 +56,7 @@ export const summarizeWithGemini = async (
 
   if (!response?.ok) {
     logGeminiIssue(`upstream returned ${response?.status ?? 'no response'}`)
-    return undefined
+    return { status: response ? 'upstream_failed' : 'request_failed' }
   }
 
   const data = (await response.json()) as {
@@ -58,13 +67,13 @@ export const summarizeWithGemini = async (
 
   if (!text) {
     logGeminiIssue('response did not include text content')
-    return undefined
+    return { status: 'missing_text' }
   }
 
   const jsonMatch = /\{[\s\S]*\}/.exec(text)
   if (!jsonMatch) {
     logGeminiIssue('response did not contain JSON')
-    return undefined
+    return { status: 'invalid_json' }
   }
 
   try {
@@ -76,17 +85,20 @@ export const summarizeWithGemini = async (
       !parsed.whyThisMatters
     ) {
       logGeminiIssue('response JSON did not match expected shape')
-      return undefined
+      return { status: 'invalid_shape' }
     }
     return {
-      summary: parsed.summary,
-      priorities: parsed.priorities.slice(0, 3),
-      whyThisMatters: parsed.whyThisMatters,
+      status: 'attached',
+      guidance: {
+        summary: parsed.summary,
+        priorities: parsed.priorities.slice(0, 3),
+        whyThisMatters: parsed.whyThisMatters,
+      },
     }
   } catch (error: unknown) {
     logGeminiIssue(
       error instanceof Error ? `failed to parse JSON: ${error.message}` : 'failed to parse JSON',
     )
-    return undefined
+    return { status: 'invalid_json' }
   }
 }

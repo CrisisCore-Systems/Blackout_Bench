@@ -76,6 +76,38 @@ const scoreColor = (score: number) => {
   return 'text-red-400'
 }
 
+const getGeminiStatusCopy = (status: AuditReport['geminiStatus']) => {
+  if (status === 'missing_api_key') {
+    return 'Gemini is disabled on the runner because GEMINI_API_KEY is not configured.'
+  }
+
+  if (status === 'no_actionable_failures') {
+    return 'Gemini was skipped because the audit produced no non-pass findings.'
+  }
+
+  if (status === 'request_failed') {
+    return 'Gemini synthesis request failed before receiving a response.'
+  }
+
+  if (status === 'upstream_failed') {
+    return 'Gemini synthesis upstream returned a non-success response.'
+  }
+
+  if (status === 'missing_text') {
+    return 'Gemini responded, but no text content was returned.'
+  }
+
+  if (status === 'invalid_json') {
+    return 'Gemini responded with text that could not be parsed as valid JSON.'
+  }
+
+  if (status === 'invalid_shape') {
+    return 'Gemini responded, but the payload did not match the expected report shape.'
+  }
+
+  return null
+}
+
 const getRepairFirst = (report: AuditReport) =>
   report.gemini?.priorities.length
     ? report.gemini.priorities
@@ -362,6 +394,12 @@ function App() {
                 first.
               </p>
             )}
+
+            {!report.gemini && report.geminiStatus !== 'attached' ? (
+              <p className="mt-4 text-sm leading-6 text-amber-200">
+                {getGeminiStatusCopy(report.geminiStatus)}
+              </p>
+            ) : null}
 
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
               <div className="metric-box metric-box--critical p-3">

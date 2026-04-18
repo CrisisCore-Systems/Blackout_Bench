@@ -47,6 +47,16 @@ export interface GeminiGuidance {
   whyThisMatters: string
 }
 
+export type GeminiStatus =
+  | 'attached'
+  | 'missing_api_key'
+  | 'no_actionable_failures'
+  | 'request_failed'
+  | 'upstream_failed'
+  | 'missing_text'
+  | 'invalid_json'
+  | 'invalid_shape'
+
 export interface AuditReport {
   id: string
   url: string
@@ -59,6 +69,7 @@ export interface AuditReport {
   essentialActionSurvival: boolean
   checks: AuditCheckResult[]
   subscores: AuditSubscores
+  geminiStatus: GeminiStatus
   gemini?: GeminiGuidance
 }
 

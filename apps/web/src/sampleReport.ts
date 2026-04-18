@@ -10,6 +10,7 @@ export const sampleReport: AuditReport = {
   criticalFailures: 2,
   silentFailures: 1,
   essentialActionSurvival: false,
+  geminiStatus: 'attached',
   subscores: {
     essentialUtility: 25,
     failureClarity: 60,
