@@ -1,5 +1,5 @@
 import type { BrowserContext, Page } from 'playwright'
-import type { AuditCheckResult } from '../../../../packages/shared/src/types'
+import type { AuditCheckResult } from '../../../../packages/shared/src/types.js'
 
 export interface AuditContext {
   page: Page

@@ -1,4 +1,4 @@
-import type { AuditCheck } from './types'
+import type { AuditCheck } from './types.js'
 
 export const lowBandwidth: AuditCheck = async ({ context, page, targetUrl }) => {
   await context.route('**/*', async (route) => {

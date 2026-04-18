@@ -1,4 +1,4 @@
-import type { AuditCheck } from './types'
+import type { AuditCheck } from './types.js'
 
 const draftProbe = 'blackoutbench-draft-probe'
 

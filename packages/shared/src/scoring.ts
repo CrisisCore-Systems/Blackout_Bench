@@ -1,4 +1,4 @@
-import type { AuditCheckResult, AuditSubscores, VerdictBand } from './types'
+import type { AuditCheckResult, AuditSubscores, VerdictBand } from './types.js'
 
 const penalties: Record<string, number> = {
   offlineReload: 20,

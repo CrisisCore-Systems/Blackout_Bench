@@ -1,8 +1,8 @@
 import { createServer, type ServerResponse } from 'node:http'
 import { randomUUID } from 'node:crypto'
-import type { AuditProgress } from '../../../packages/shared/src/types'
-import { runAudit } from './index'
-import { normalizeTargetUrl } from './utils/url'
+import type { AuditProgress } from '../../../packages/shared/src/types.js'
+import { runAudit } from './index.js'
+import { normalizeTargetUrl } from './utils/url.js'
 
 const port = Number(process.env.PORT ?? 8787)
 const audits = new Map<string, AuditProgress>()

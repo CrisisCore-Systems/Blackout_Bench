@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { scoreAudit } from '../../../../packages/shared/src/scoring'
+import { scoreAudit } from '../../../../packages/shared/src/scoring.js'
 
 test('scoreAudit applies hard penalties for critical failures', () => {
   const result = scoreAudit([

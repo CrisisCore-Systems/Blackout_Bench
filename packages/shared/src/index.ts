@@ -1,2 +1,2 @@
-export * from './types'
-export * from './scoring'
+export * from './types.js'
+export * from './scoring.js'

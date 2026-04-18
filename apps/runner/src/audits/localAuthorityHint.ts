@@ -1,4 +1,4 @@
-import type { AuditCheck } from './types'
+import type { AuditCheck } from './types.js'
 
 export const localAuthorityHint: AuditCheck = async ({ page, targetUrl }) => {
   await page.goto(targetUrl, { waitUntil: 'domcontentloaded' })

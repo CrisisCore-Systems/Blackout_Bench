@@ -1,4 +1,4 @@
-import type { AuditCheckResult, GeminiGuidance } from '../../../../packages/shared/src/types'
+import type { AuditCheckResult, GeminiGuidance } from '../../../../packages/shared/src/types.js'
 
 export const summarizeWithGemini = async (
   checks: AuditCheckResult[],

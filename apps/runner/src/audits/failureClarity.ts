@@ -1,4 +1,4 @@
-import type { AuditCheck } from './types'
+import type { AuditCheck } from './types.js'
 
 const actionableTerms = ['offline', 'retry', 'reconnect', 'try again', 'connection']
 
