@@ -12,6 +12,8 @@ services:
         value: 22
       - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
         value: "true"
+      - key: BROWSER_CDP_ENDPOINT
+        sync: false
       - key: BROWSER_WS_ENDPOINT
         sync: false
       - key: GEMINI_API_KEY

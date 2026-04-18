@@ -23,6 +23,16 @@ createServer(async (req, res) => {
     return
   }
 
+  if (req.method === 'GET' && req.url === '/') {
+    send(res, 200, { ok: true, service: 'blackoutbench-runner' })
+    return
+  }
+
+  if (req.method === 'GET' && req.url === '/health') {
+    send(res, 200, { ok: true, service: 'blackoutbench-runner' })
+    return
+  }
+
   if (req.method === 'GET' && req.url === '/api/health') {
     send(res, 200, { ok: true })
     return

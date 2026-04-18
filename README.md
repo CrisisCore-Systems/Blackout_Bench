@@ -119,14 +119,16 @@ GEMINI_API_KEY=your_key_here npm run dev:runner
 Optional remote browser support for lightweight runner hosting:
 
 ```bash
+BROWSER_CDP_ENDPOINT=wss://production-sfo.browserless.io/chromium?token=YOUR_TOKEN npm run dev:runner
+```
+
+If your provider gives you a Playwright-native websocket endpoint instead, use:
+
+```bash
 BROWSER_WS_ENDPOINT=wss://your-provider-endpoint npm run dev:runner
 ```
 
-or:
-
-```bash
-BROWSER_CDP_ENDPOINT=wss://your-cdp-endpoint npm run dev:runner
-```
+For Browserless Chromium endpoints, prefer `BROWSER_CDP_ENDPOINT`. The runner will also treat Browserless Chromium URLs as CDP if they are accidentally placed in `BROWSER_WS_ENDPOINT`.
 
 ## Deploy Notes
 

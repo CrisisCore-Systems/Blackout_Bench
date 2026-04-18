@@ -12,6 +12,9 @@ import { spinnerAbuse } from './audits/spinnerAbuse.js'
 import type { AuditCheck } from './audits/types.js'
 import { summarizeWithGemini } from './prompts/gemini.js'
 
+const isBrowserlessCdpEndpoint = (endpoint: string) =>
+  endpoint.includes('browserless.io/chromium') || endpoint.includes('/devtools/browser/')
+
 const connectBrowser = async () => {
   const cdpEndpoint = process.env.BROWSER_CDP_ENDPOINT?.trim()
   const wsEndpoint = process.env.BROWSER_WS_ENDPOINT?.trim()
@@ -21,6 +24,10 @@ const connectBrowser = async () => {
   }
 
   if (wsEndpoint) {
+    if (isBrowserlessCdpEndpoint(wsEndpoint)) {
+      return chromium.connectOverCDP(wsEndpoint)
+    }
+
     return chromium.connect(wsEndpoint)
   }
 
