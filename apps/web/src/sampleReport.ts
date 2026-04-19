@@ -100,6 +100,6 @@ export const sampleReport: AuditReport = {
       'Decouple export and recovery paths from full application readiness.',
       'Make retry semantics explicit about what was and was not restored.',
     ],
-    whyThisMatters: 'An app that fails this way does not merely become fragile. It becomes misleading by keeping the appearance of control while removing the user’s real ability to complete work, recover state, or judge what remains safe.',
+    whyThisMatters: 'This is not a cosmetic failure. The interface keeps the shell alive while the user’s real ability to finish the task, recover their work, or trust the current state collapses underneath it.',
   },
 }

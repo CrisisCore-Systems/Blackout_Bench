@@ -13,6 +13,14 @@ interface GeminiSynthesisResult {
   guidance?: GeminiGuidance
 }
 
+interface GeminiErrorPayload {
+  error?: {
+    code?: number
+    status?: string
+    message?: string
+  }
+}
+
 const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com'
 const DEFAULT_GEMINI_API_VERSION = 'v1beta'
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
@@ -20,6 +28,63 @@ const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
 const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '')
 const stripLeadingAndTrailingSlashes = (value: string) => value.replaceAll(/^\/+|\/+$/g, '')
 const normalizeModelName = (value: string) => value.replace(/^models\//i, '')
+
+const parseGuidance = (text: string): GeminiSynthesisResult => {
+  const jsonMatch = /\{[\s\S]*\}/.exec(text)
+  if (!jsonMatch) {
+    logGeminiIssue('response did not contain JSON')
+    return { status: 'invalid_json' }
+  }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as GeminiGuidance
+    if (
+      !parsed.summary ||
+      !Array.isArray(parsed.priorities) ||
+      !parsed.priorities.every((priority) => typeof priority === 'string') ||
+      !parsed.whyThisMatters
+    ) {
+      logGeminiIssue('response JSON did not match expected shape')
+      return { status: 'invalid_shape' }
+    }
+
+    return {
+      status: 'attached',
+      guidance: {
+        summary: parsed.summary,
+        priorities: parsed.priorities.slice(0, 3),
+        whyThisMatters: parsed.whyThisMatters,
+      },
+    }
+  } catch (error: unknown) {
+    logGeminiIssue(
+      error instanceof Error ? `failed to parse JSON: ${error.message}` : 'failed to parse JSON',
+    )
+    return { status: 'invalid_json' }
+  }
+}
+
+const logUpstreamFailure = async (
+  response: Response,
+  requestTarget: string,
+  rawModel: string,
+  model: string,
+) => {
+  const errorPayload = (await response.json().catch(() => undefined)) as GeminiErrorPayload | undefined
+  const errorMessage = errorPayload?.error?.message?.trim()
+
+  logGeminiIssue(
+    [
+      `upstream returned ${response.status}${response.status === 404 ? ' NOT_FOUND' : ''}`,
+      `target ${requestTarget}`,
+      `raw model ${rawModel}`,
+      rawModel === model ? undefined : `normalized model ${model}`,
+      errorMessage,
+    ]
+      .filter(Boolean)
+      .join(' | '),
+  )
+}
 
 export const summarizeWithGemini = async (
   checks: AuditCheckResult[],
@@ -49,7 +114,7 @@ export const summarizeWithGemini = async (
   const prompt = {
     failures: failedChecks,
     request:
-      'Return strict JSON with keys summary (string), priorities (array of up to 3 strings), whyThisMatters (string). Do not wrap in markdown fences.',
+      'Return strict JSON with keys summary (string), priorities (array of up to 3 strings), whyThisMatters (string). Write in BlackoutBench voice: concrete, unsentimental, and specific about lost control, broken continuity, or unsafe completion. Avoid generic phrases like user experience, reliability, or important to fix. Do not wrap in markdown fences.',
   }
 
   const response = await fetch(requestUrl, {
@@ -74,30 +139,7 @@ export const summarizeWithGemini = async (
   }
 
   if (!response.ok) {
-    const errorPayload = (await response
-      .json()
-      .catch(() => undefined)) as
-      | {
-          error?: {
-            code?: number
-            status?: string
-            message?: string
-          }
-        }
-      | undefined
-    const errorMessage = errorPayload?.error?.message?.trim()
-
-    logGeminiIssue(
-      [
-        `upstream returned ${response.status}${response.status === 404 ? ' NOT_FOUND' : ''}`,
-        `target ${requestTarget}`,
-        `raw model ${rawModel}`,
-        rawModel === model ? undefined : `normalized model ${model}`,
-        errorMessage,
-      ]
-        .filter(Boolean)
-        .join(' | '),
-    )
+    await logUpstreamFailure(response, requestTarget, rawModel, model)
     return { status: response.status === 404 ? 'resource_not_found' : 'upstream_failed' }
   }
 
@@ -112,35 +154,5 @@ export const summarizeWithGemini = async (
     return { status: 'missing_text' }
   }
 
-  const jsonMatch = /\{[\s\S]*\}/.exec(text)
-  if (!jsonMatch) {
-    logGeminiIssue('response did not contain JSON')
-    return { status: 'invalid_json' }
-  }
-
-  try {
-    const parsed = JSON.parse(jsonMatch[0]) as GeminiGuidance
-    if (
-      !parsed.summary ||
-      !Array.isArray(parsed.priorities) ||
-      !parsed.priorities.every((priority) => typeof priority === 'string') ||
-      !parsed.whyThisMatters
-    ) {
-      logGeminiIssue('response JSON did not match expected shape')
-      return { status: 'invalid_shape' }
-    }
-    return {
-      status: 'attached',
-      guidance: {
-        summary: parsed.summary,
-        priorities: parsed.priorities.slice(0, 3),
-        whyThisMatters: parsed.whyThisMatters,
-      },
-    }
-  } catch (error: unknown) {
-    logGeminiIssue(
-      error instanceof Error ? `failed to parse JSON: ${error.message}` : 'failed to parse JSON',
-    )
-    return { status: 'invalid_json' }
-  }
+  return parseGuidance(text)
 }

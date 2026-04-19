@@ -110,34 +110,31 @@ It is trying to answer one harder question:
 
 The moment the product became real was not when the audit ran.
 
-It was when it produced a report harsh enough to tell the truth.
+It was when the live deployment produced a report honest enough to be useful.
 
-A low survivability score.
-Multiple critical failures.
-A silent failure.
-A short repair path.
-A plain statement of why the result matters under interruption and degraded conditions.
+The winning example was a live audit of `https://paintracker.ca`.
 
-Something like this:
-
-**Survivability Score: 40**  
-**Verdict: Fragile**
+**Survivability Score: 65**  
+**Verdict: Degrades but usable**
 
 ### Critical Failures
 
-- essential task collapses after connectivity drops
-- draft state is lost on refresh
-- export depends on full application recovery
+- offline reload breaks continuity when the app is forced back into an interrupted state
+- essential action survival still collapses when the network drops at the wrong moment
 
-### Silent Failures
+### What Held
 
-- retry suggests recovery without restoring real utility
+- failure clarity passed
+- reconnect behavior passed
+- low-bandwidth posture passed
+- local authority hint passed
+- spinner abuse passed
 
-### Repair First
+### Why It Worked As Evidence
 
-- preserve primary task state locally before network confirmation
-- surface degraded-mode messaging immediately
-- decouple export from full readiness
+- it showed real strengths instead of staging total collapse
+- it still exposed two critical failures without softening the language
+- it made the tool feel like an inspection, not a demo script
 
 That changed the product.
 
@@ -151,6 +148,12 @@ Interfaces that appear intact after the task has already become unsafe.
 Recovery states that preserve the appearance of competence while removing the user’s real ability to finish, recover, or understand what still works.
 
 That is where software becomes most dangerous.
+
+And it gave the project its clearest live lines:
+
+- A failed inspection is better than a silent lie.
+- Most apps assume stability. BlackoutBench tests what survives when that assumption fails.
+- The planet does not care about your happy path.
 
 ## Gemini's Role
 
@@ -203,6 +206,30 @@ That is enough.
 Because the core argument is already there:
 
 **Most apps assume stability. BlackoutBench punishes that assumption.**
+
+## Submission Proof
+
+The final submission package is built around one live audit and one short capture sequence.
+
+The live proof target is `https://paintracker.ca`.
+
+The final asset set shows:
+
+- the hero and bench control on the live frontend
+- the completed result screen with the 65 score, the Degrades but usable verdict, and the failure pattern
+- the live audit console showing browser connection and check execution
+- the sample report preview block
+- one short demo GIF showing paste URL, run bench, and result appears
+
+That package matters because it is not speculative anymore. It shows the full chain working in public:
+
+- frontend loads
+- audit runs
+- browser connects
+- checks execute
+- result renders
+- Gemini guidance appears
+- export controls are exposed
 
 ## Closing
 

@@ -1,10 +1,13 @@
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 
-const rootDir = path.resolve(process.cwd(), '..', '..')
+const scriptDir = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.resolve(scriptDir, '..', '..', '..')
 const outputDir = path.join(rootDir, 'docs', 'screenshots')
-const baseUrl = 'http://localhost:5173'
+const baseUrl = (process.env.CAPTURE_BASE_URL ?? 'http://localhost:5173').replace(/\/$/, '')
+const targetUrl = process.env.CAPTURE_TARGET_URL ?? 'https://paintracker.ca'
 const viewport = { width: 1440, height: 1600 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -16,6 +19,8 @@ const clipToPng = async (page, fileName, clip) => {
   })
 }
 
+const getSection = (page, title) => page.getByText(title).locator('xpath=ancestor::section[1]')
+
 const main = async () => {
   await mkdir(outputDir, { recursive: true })
 
@@ -26,51 +31,51 @@ const main = async () => {
     const page = await context.newPage()
     await page.goto(baseUrl, { waitUntil: 'networkidle' })
 
-    await clipToPng(page, 'hero-shot.png', {
+    const benchControl = page.locator('#bench-control')
+    await benchControl.scrollIntoViewIfNeeded()
+    await wait(250)
+    const benchBounds = await benchControl.boundingBox()
+
+    await clipToPng(page, 'hero-bench-shot.png', {
       x: 0,
       y: 0,
       width: viewport.width,
-      height: 860,
+      height: Math.min(viewport.height, Math.ceil((benchBounds?.y ?? 880) + (benchBounds?.height ?? 320) + 48)),
     })
 
-    const sections = page.locator('main > section')
-    await sections.nth(5).scrollIntoViewIfNeeded()
+    const sampleSection = getSection(page, 'Sample report preview')
+    await sampleSection.scrollIntoViewIfNeeded()
     await wait(250)
-    await sections.nth(5).screenshot({ path: path.join(outputDir, 'sample-report-shot.png') })
+    await sampleSection.screenshot({ path: path.join(outputDir, 'sample-report-shot.png') })
 
-    await page.getByRole('button', { name: 'See Sample Report' }).first().click()
-    await page.getByText('Inspection outcome').waitFor({ state: 'visible' })
-    const resultSection = page
-      .getByText('Inspection outcome')
-      .locator('xpath=ancestor::section[1]')
-    await resultSection.scrollIntoViewIfNeeded()
-    await wait(250)
-    await resultSection.screenshot({ path: path.join(outputDir, 'result-screen-shot.png') })
-
-    const runningPage = await context.newPage()
-    await runningPage.goto(baseUrl, { waitUntil: 'networkidle' })
-    await runningPage.getByPlaceholder('https://your-app.example').fill('https://example.com')
-    await runningPage.getByRole('button', { name: 'Run Bench' }).click()
+    await page.locator('#bench-control').scrollIntoViewIfNeeded()
+    await page.getByPlaceholder('https://your-app.example').fill(targetUrl)
+    await page.getByRole('button', { name: 'Run Bench' }).click()
 
     try {
-      await runningPage.getByText(/Current check:/).waitFor({ timeout: 12000 })
-      await wait(500)
-      const runningSections = runningPage.locator('main > section')
-      await runningSections.nth(3).scrollIntoViewIfNeeded()
-      await wait(200)
-      await runningSections.nth(3).screenshot({ path: path.join(outputDir, 'audit-in-progress-shot.png') })
+      await page.getByText(/Using browser endpoint:|Browser connection mode:|Running /).first().waitFor({ timeout: 20000 })
+      const consoleSection = getSection(page, 'Live audit console')
+      await consoleSection.scrollIntoViewIfNeeded()
+      await wait(350)
+      await consoleSection.screenshot({ path: path.join(outputDir, 'live-audit-console-shot.png') })
     } catch {
-      // Skip if the audit resolves too fast to capture a clean in-progress state.
+      // Skip if the audit resolves too fast to capture a clean console state.
     }
 
-    await runningPage.close()
+    await page.getByText('Inspection outcome').waitFor({ state: 'visible', timeout: 120000 })
+    const resultSection = getSection(page, 'Inspection outcome')
+    await resultSection.scrollIntoViewIfNeeded()
+    await wait(350)
+    await resultSection.screenshot({ path: path.join(outputDir, 'result-screen-shot.png') })
   } finally {
     await context.close()
     await browser.close()
   }
 }
 
-main().catch((error) => {
+try {
+  await main()
+} catch (error) {
   console.error(error)
   process.exitCode = 1
-})
+}

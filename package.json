@@ -13,6 +13,8 @@
     "dev:runner": "npm --workspace apps/runner run dev",
     "build": "npm --workspace apps/web run build && npm --workspace apps/runner run build",
     "lint": "npm --workspace apps/web run lint",
-    "test": "npm --workspace apps/runner run test"
+    "test": "npm --workspace apps/runner run test",
+    "capture:screens": "node apps/runner/scripts/captureScreenshots.mjs",
+    "capture:demo": "node apps/runner/scripts/recordDemo.mjs"
   }
 }
