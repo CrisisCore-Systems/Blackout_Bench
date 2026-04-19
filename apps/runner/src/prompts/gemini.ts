@@ -13,12 +13,28 @@ interface GeminiSynthesisResult {
   guidance?: GeminiGuidance
 }
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
+const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com'
+const DEFAULT_GEMINI_API_VERSION = 'v1beta'
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
+
+const stripTrailingSlashes = (value: string) => value.replace(/\/+$/, '')
+const stripLeadingAndTrailingSlashes = (value: string) => value.replaceAll(/^\/+|\/+$/g, '')
+const normalizeModelName = (value: string) => value.replace(/^models\//i, '')
 
 export const summarizeWithGemini = async (
   checks: AuditCheckResult[],
 ): Promise<GeminiSynthesisResult> => {
   const apiKey = process.env.GEMINI_API_KEY
+  const rawModel = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL
+  const model = normalizeModelName(rawModel)
+  const apiVersion = stripLeadingAndTrailingSlashes(
+    process.env.GEMINI_API_VERSION?.trim() || DEFAULT_GEMINI_API_VERSION,
+  )
+  const baseUrl = stripTrailingSlashes(
+    process.env.GEMINI_BASE_URL?.trim() || DEFAULT_GEMINI_BASE_URL,
+  )
+  const requestUrl = `${baseUrl}/${apiVersion}/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`
+  const requestTarget = `${baseUrl}/${apiVersion}/models/${model}:generateContent`
 
   if (!apiKey) {
     return { status: 'missing_api_key' }
@@ -36,31 +52,53 @@ export const summarizeWithGemini = async (
       'Return strict JSON with keys summary (string), priorities (array of up to 3 strings), whyThisMatters (string). Do not wrap in markdown fences.',
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: JSON.stringify(prompt) }] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-        },
-      }),
-    },
-  ).catch((error: unknown) => {
+  const response = await fetch(requestUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: JSON.stringify(prompt) }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2,
+      },
+    }),
+  }).catch((error: unknown) => {
     logGeminiIssue(
       error instanceof Error ? `request failed: ${error.message}` : 'request failed',
     )
     return undefined
   })
 
-  if (!response?.ok) {
+  if (!response) {
+    return { status: 'request_failed' }
+  }
+
+  if (!response.ok) {
+    const errorPayload = (await response
+      .json()
+      .catch(() => undefined)) as
+      | {
+          error?: {
+            code?: number
+            status?: string
+            message?: string
+          }
+        }
+      | undefined
+    const errorMessage = errorPayload?.error?.message?.trim()
+
     logGeminiIssue(
-      `upstream returned ${response?.status ?? 'no response'} for model ${GEMINI_MODEL}`,
+      [
+        `upstream returned ${response.status}${response.status === 404 ? ' NOT_FOUND' : ''}`,
+        `target ${requestTarget}`,
+        `raw model ${rawModel}`,
+        rawModel === model ? undefined : `normalized model ${model}`,
+        errorMessage,
+      ]
+        .filter(Boolean)
+        .join(' | '),
     )
-    return { status: response ? 'upstream_failed' : 'request_failed' }
+    return { status: response.status === 404 ? 'resource_not_found' : 'upstream_failed' }
   }
 
   const data = (await response.json()) as {

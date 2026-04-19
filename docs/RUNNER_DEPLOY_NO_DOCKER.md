@@ -72,6 +72,7 @@ Optional:
 ```bash
 GEMINI_API_KEY=...
 GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_VERSION=v1beta
 ```
 
 1. Deploy as a normal Node service from the repository root:

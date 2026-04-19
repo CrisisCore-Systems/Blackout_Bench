@@ -122,6 +122,14 @@ To override the default Gemini model:
 GEMINI_API_KEY=your_key_here GEMINI_MODEL=gemini-2.5-flash npm run dev:runner
 ```
 
+The runner accepts either `gemini-2.5-flash` or `models/gemini-2.5-flash` for `GEMINI_MODEL` and normalizes both to the request shape Google expects.
+
+If Google changes the supported path for your model, you can also override the API path explicitly:
+
+```bash
+GEMINI_API_KEY=your_key_here GEMINI_API_VERSION=v1beta npm run dev:runner
+```
+
 Optional remote browser support for lightweight runner hosting:
 
 ```bash

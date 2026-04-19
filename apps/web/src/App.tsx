@@ -36,6 +36,30 @@ const verdictBands = [
 ]
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/$/, '')
 const apiUrl = (path: string) => `${apiBaseUrl}${path}`
+const apiTargetLabel = apiBaseUrl || 'same-origin /api'
+
+const getStatusMessage = (previewReport?: AuditReport, progress?: AuditProgress) => {
+  if (previewReport) {
+    return 'Loaded canonical sample report for screenshots, README excerpts, and demo framing.'
+  }
+
+  if (progress?.status === 'done') {
+    return 'Audit complete.'
+  }
+
+  if (progress?.status === 'running') {
+    return `Current check: ${progress.currentCheck ?? 'initializing'}`
+  }
+
+  if (progress?.status === 'error') {
+    return 'Audit failed.'
+  }
+
+  return 'Paste a URL and run the bench.'
+}
+
+const toErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? `${fallback} ${error.message}` : fallback
 
 const getFindingTone = (label: AuditReport['checks'][number]['label']) => {
   if (label === 'Critical') {
@@ -87,6 +111,10 @@ const getGeminiStatusCopy = (status: AuditReport['geminiStatus']) => {
 
   if (status === 'request_failed') {
     return 'Gemini synthesis request failed before receiving a response.'
+  }
+
+  if (status === 'resource_not_found') {
+    return 'Gemini returned 404 NOT_FOUND. Check GEMINI_MODEL, GEMINI_API_VERSION, and whether the request path matches a supported model for that API version.'
   }
 
   if (status === 'upstream_failed') {
@@ -162,19 +190,7 @@ function App() {
 
   const report = progress?.report ?? previewReport
   const repairFirst = report ? getRepairFirst(report) : []
-  let statusMessage = 'Paste a URL and run the bench.'
-
-  if (previewReport) {
-    statusMessage = 'Loaded canonical sample report for screenshots, README excerpts, and demo framing.'
-  }
-
-  if (progress?.status === 'done') {
-    statusMessage = 'Audit complete.'
-  }
-
-  if (progress?.status === 'running') {
-    statusMessage = `Current check: ${progress.currentCheck ?? 'initializing'}`
-  }
+  const statusMessage = getStatusMessage(previewReport, progress)
 
   const scrollToBenchControl = () => {
     globalThis.document.getElementById('bench-control')?.scrollIntoView({
@@ -200,20 +216,39 @@ function App() {
     setSelectedFinding(0)
     scrollToBenchControl()
 
-    const res = await fetch(apiUrl('/api/audits'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    })
+    try {
+      const res = await fetch(apiUrl('/api/audits'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
 
-    if (!res.ok) {
-      const payload = (await res.json().catch(() => ({}))) as { error?: string }
-      setError(payload.error ?? 'Failed to start audit.')
-      return
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => ({}))) as { error?: string }
+        setError(
+          payload.error
+            ? `Runner request failed (${res.status}): ${payload.error}`
+            : `Runner request failed (${res.status}).`,
+        )
+        return
+      }
+
+      const payload = (await res.json()) as { auditId?: string }
+
+      if (!payload.auditId) {
+        setError('Runner accepted the request but did not return an audit id.')
+        return
+      }
+
+      setAuditId(payload.auditId)
+    } catch (requestError: unknown) {
+      setError(
+        toErrorMessage(
+          requestError,
+          `Could not reach the audit runner at ${apiTargetLabel}.`,
+        ),
+      )
     }
-
-    const payload = (await res.json()) as { auditId: string }
-    setAuditId(payload.auditId)
   }
 
   const showSampleReport = () => {
@@ -229,11 +264,37 @@ function App() {
     if (!auditId) return
 
     const timer = globalThis.setInterval(async () => {
-      const res = await fetch(apiUrl(`/api/audits/${auditId}`))
-      if (!res.ok) return
-      const data = (await res.json()) as AuditProgress
-      setProgress(data)
-      if (data.status === 'done' || data.status === 'error') {
+      try {
+        const res = await fetch(apiUrl(`/api/audits/${auditId}`))
+
+        if (!res.ok) {
+          const payload = (await res.json().catch(() => ({}))) as { error?: string }
+          setError(
+            payload.error
+              ? `Runner polling failed (${res.status}): ${payload.error}`
+              : `Runner polling failed (${res.status}).`,
+          )
+          globalThis.clearInterval(timer)
+          return
+        }
+
+        const data = (await res.json()) as AuditProgress
+        setProgress(data)
+
+        if (data.status === 'error') {
+          setError(data.error ?? 'Audit failed during runner execution.')
+        }
+
+        if (data.status === 'done' || data.status === 'error') {
+          globalThis.clearInterval(timer)
+        }
+      } catch (requestError: unknown) {
+        setError(
+          toErrorMessage(
+            requestError,
+            `Lost connection while polling the audit runner at ${apiTargetLabel}.`,
+          ),
+        )
         globalThis.clearInterval(timer)
       }
     }, 1200)
@@ -314,6 +375,19 @@ function App() {
             <p className="mt-3 font-mono text-sm uppercase tracking-[0.14em] text-amber-200">
               {statusMessage}
             </p>
+            <div className="mt-4 border-t border-slate-800/80 pt-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-500">
+                Built API target
+              </p>
+              <p className="mt-2 break-all font-mono text-xs leading-5 text-slate-200">
+                {apiTargetLabel}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {apiBaseUrl
+                  ? 'This frontend build will call the configured runner URL.'
+                  : 'No VITE_API_BASE_URL was baked into this build, so requests will fall back to same-origin /api.'}
+              </p>
+            </div>
           </div>
         </div>
 

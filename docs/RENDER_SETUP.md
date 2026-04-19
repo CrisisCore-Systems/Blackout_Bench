@@ -48,6 +48,9 @@ Optional:
 2. `GEMINI_MODEL=gemini-2.5-flash`
    Use this to override the default model if Google retires or changes model endpoints.
 
+3. `GEMINI_API_VERSION=v1beta`
+   Use this if the model you are calling is only exposed on a different Gemini API version such as `v1` vs `v1beta`.
+
 ## Verify the Runner
 
 After deploy, open either:

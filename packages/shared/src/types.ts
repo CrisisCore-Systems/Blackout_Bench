@@ -52,6 +52,7 @@ export type GeminiStatus =
   | 'missing_api_key'
   | 'no_actionable_failures'
   | 'request_failed'
+  | 'resource_not_found'
   | 'upstream_failed'
   | 'missing_text'
   | 'invalid_json'
